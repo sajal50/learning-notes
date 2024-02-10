@@ -95,7 +95,11 @@ You should generally **prefer tolerating faults over preventing faults**.
 
 ### Scalability
 
-This is how do we cope with increased load. We need to succinctly describe the current load on the system; only then we can discuss growth questions.
+This is how do we cope with increased load. We need to succinctly describe the current load on the system; only then we can discuss growth questions. Load can be describe with load parameters. Depends on system to system. For
+  - Webserver: can be QPS
+  - Database: Raio of reads/writes
+
+Also, it is important to note that you may be interested in average of these numbers, or maybe the real bottleneck in your system is caused by number of extreme cases.
 
 ---
 
@@ -115,13 +119,14 @@ Downside of approach 2 is that posting a tweet now requires a lot of extra work.
 
 Twitter moved to an hybrid of both approaches. Tweets continue to be fanned out to home timelines but a small number of users with a very large number of followers are fetched separately and merged with that user's home timeline when it is read, like in approach 1.
 
+**Distribution of followers per user** is a key load parameter.
 ---
 
 #### Describing performance
 
 What happens when the load increases:
-* How is the performance affected?
-* How much do you need to increase your resources?
+* How is the performance affected if resources are kept the same?
+* How much do you need to increase your resources to keep the performance same?
 
 In a batch processing system such as Hadoop, we usually care about _throughput_, or the number of records we can process per second.
 
@@ -141,6 +146,8 @@ On the other hand, optimising for the 99.99th percentile would be too expensive.
 _Service level objectives_ (SLOs) and _service level agreements_ (SLAs) are contracts that define the expected performance and availability of a service.
 An SLA may state the median response time to be less than 200ms and a 99th percentile under 1s. **These metrics set expectations for clients of the service and allow customers to demand a refund if the SLA is not met.**
 
+_Head of the line blocking_: Small number of slow requests hold up processing of subsequent requests, even if those subsequent requests can be processed more quickly.
+
 Queueing delays often account for large part of the response times at high percentiles. **It is important to measure times on the client side.**
 
 When generating load artificially, the client needs to keep sending requests independently of the response time.
@@ -148,14 +155,19 @@ When generating load artificially, the client needs to keep sending requests ind
 > ##### Percentiles in practice
 > Calls in parallel, the end-user request still needs to wait for the slowest of the parallel calls to complete.
 > The chance of getting a slow call increases if an end-user request requires multiple backend calls.
+> _Tail latency amplification_: If an end user request requires multiple calls to backend, then by simple probablility the chance of getting a slow call increases.
 
 #### Approaches for coping with load
+
+Likely that need to rethink architecture with every order of increase in load.
 
 * _Scaling up_ or _vertical scaling_: Moving to a more powerful machine
 * _Scaling out_ or _horizontal scaling_: Distributing the load across multiple smaller machines.
 * _Elastic_ systems: Automatically add computing resources when detected load increase. Quite useful if load is unpredictable.
 
-Distributing stateless services across multiple machines is fairly straightforward. Taking stateful data systems from a single node to a distributed setup can introduce a lot of complexity. Until recently it was common wisdom to keep your database on a single node.
+Distributing stateless services across multiple machines is fairly straightforward. Taking stateful data systems from a single node to a distributed setup can introduce a lot of complexity. Until recently it was common wisdom to keep your database on a single node. But requirement of high availability and reliability made us make them distributed.
+
+Scalable architectures are built from general purpose building blocks and put together in familiar patterns.
 
 ### Maintainability
 
@@ -180,6 +192,12 @@ A good operations team is responsible for
 
 **Good operability means making routine tasks easy.**
 
+Data systems/or just in general your service can do things to make those routine tasks easier. Example
+* Monitoring
+* Avoid dependency on single machines
+* Self healing if possible
+* Good defaults, but provides manual overrides, and more.
+
 #### Simplicity: managing complexity
 
 When complexity makes maintenance hard, budget and schedules are often overrun. There is a greater risk of introducing bugs.
@@ -188,9 +206,11 @@ Making a system simpler means removing _accidental_ complexity, as non inherent 
 
 One of the best tools we have for removing accidental complexity is _abstraction_ that hides the implementation details behind clean and simple to understand APIs and facades.
 
+Good abstractions are hard in distributed systems. But there are patterns and algos we can use.
+
 #### Evolvability: making change easy
 
-_Agile_ working patterns provide a framework for adapting to change.
+_Agile_ working patterns provide a framework for adapting to change. Simple and maintainable systems are eaiser to evolve.
 
 ---
 
