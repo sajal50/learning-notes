@@ -69,6 +69,8 @@ A data-intensive application is typically built from standard building blocks. T
 
 ### Reliability
 
+Systems should run correctly with desired perfmance, even with some faults.
+
 Typical expectations:
 * Application performs the function the user expected
 * Tolerate the user making mistakes
@@ -77,12 +79,12 @@ Typical expectations:
 
 Systems that anticipate faults and can cope with them are called _fault-tolerant_ or _resilient_.
 
-**A fault is usually defined as one component of the system deviating from its spec**, whereas _failure_ is when the system as a whole stops providing the required service to the user.
+**A fault is usually defined as one component of the system deviating from its spec**, whereas _failure_ is when the system as a whole stops providing the required service to the user. Faults can lead to failures.
 
 You should generally **prefer tolerating faults over preventing faults**.
 
 * **Hardware faults**. Until recently redundancy of hardware components was sufficient for most applications. As data volumes increase, more applications use a larger number of machines, proportionally increasing the rate of hardware faults. **There is a move towards systems that tolerate the loss of entire machines**. A system that tolerates machine failure can be patched one node at a time, without downtime of the entire system (_rolling upgrade_).
-* **Software errors**. It is unlikely that a large number of hardware components will fail at the same time. Software errors are a systematic error within the system, they tend to cause many more system failures than uncorrelated hardware faults.
+* **Software errors**. It is unlikely that a large number of hardware components will fail at the same time. Software errors are a systematic error within the system, they tend to cause many more system failures than uncorrelated hardware faults. Systematic software failures are correlated across the node. Examples are cascading failures, a software that crashes when given a bad input. No quick solution except thorough testing, process isolation, monitoring, alerting. There can be **self check** systems like for message queue, # of incoming messages == # of outgoing messages. Not all systems may have such guarantees.
 * **Human errors**. Humans are known to be unreliable. Configuration errors by operators are a leading cause of outages. You can make systems more reliable:
     - Minimising the opportunities for error, peg: with admin interfaces that make easy to do the "right thing" and discourage the "wrong thing".
     - Provide fully featured non-production _sandbox_ environments where people can explore and experiment safely.
