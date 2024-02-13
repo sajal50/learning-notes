@@ -223,31 +223,48 @@ _Agile_ working patterns provide a framework for adapting to change. Simple and 
 
 Most applications are built by layering one data model on top of another. Each layer hides the complexity of the layers below by providing a clean data model. These abstractions allow different groups of people to work effectively.
 
+a)In process data structures and APIs are represented in terms of b) XML, JSON, relation database or graph database, c) which in terms of bytes on disk/memory, which in terms of d) electrical signals and pules.
+
+This chapter focusses on b) and the next on c). 
+
 ### Relational model vs document model
 
-The roots of relational databases lie in _business data processing_, _transaction processing_ and _batch processing_.
+The roots of relational databases lie in _business data processing_, _transaction processing_ and _batch processing_. In relational schema, we have relations (tables) and tuples (rows).
 
 The goal was to hide the implementation details behind a cleaner interface.
 
 _Not Only SQL_ has a few driving forces:
-* Greater scalability
+* Greater scalability due to very large datasets and high **_write_** throughput. 
 * preference for free and open source software
 * Specialised query optimisations
 * Desire for a more dynamic and expressive data model
 
 **With a SQL model, if data is stored in a relational tables, an awkward translation layer is translated, this is called _impedance mismatch_.**
+ORMs can help to some extent.
+
+In relational model, to store one to many relationship there are at least 3 options:
+-  traditionally, you'd have normalized tables with foreign key reference
+-  In newer database you can store multiple values in structured datatypes and the database also provides a way to query.
+-  You can always store in regular JSON in text format, but can't query its fields. And application code is responsible for reading/parsing it.
+
 
 JSON model reduces the impedance mismatch and the lack of schema is often cited as an advantage.
 
 JSON representation has better _locality_ than the multi-table SQL schema. All the relevant information is in one place, and one query is sufficient.
 
-In relational databases, it's normal to refer to rows in other tables by ID, because joins are easy. In document databases, joins are not needed for one-to-many tree structures, and support for joins is often weak.
+JSON however has problems with data encoding formats (will be covered later).
+
+#### Many to one and many to many relationships
+
+For items which are free text like city names or regions are given ids. Id has no meaning to the user, it never needs to change even if the value it is representing can change. Much easier update in that case.
+
+In relational databases, it's normal to refer to rows in other tables by ID, because joins are easy. In document databases, joins are not needed for one-to-many tree structures, and support for joins is often weak. Many to one relationship doesn't nicely fit into document model.
 
 If the database itself does not support joins, you have to emulate a join in application code by making multiple queries.
 
-The most popular database for business data processing in the 1970s was the IBM's _Information Management System_ (IMS).
+The most popular database for business data processing in the 1970s was the IBM's _Information Management System_ (IMS). IMS used a _hierarchical model_ (similar to document model) and like document databases worked well for one-to-many relationships, but it made many-to-,any relationships difficult, and it didn't support joins.
 
-IMS used a _hierarchical model_ and like document databases worked well for one-to-many relationships, but it made many-to-,any relationships difficult, and it didn't support joins.
+There were two models which were proposed to solve this - network model (not so popular anymore) and relational model (overtook the world).
 
 #### The network model
 
@@ -267,13 +284,19 @@ The relational model thus made it much easier to add new features to application
 
 ---
 
+When it comes to representing many-to-many and many-to-one relationships, document model and relational model aren't that different. One has foreign keys and other has document reference. These need to be resolved either through join or through follow up queries. 
+
+There are differences between document dbs and relational dbs even in terms of concurrency and fault tolerance. But they will be discussed later.
+
 **The main arguments in favour of the document data model are schema flexibility, better performance due to locality, and sometimes closer data structures to the ones used by the applications. The relation model counters by providing better support for joins, and many-to-one and many-to-many relationships.**
 
-If the data in your application has a document-like structure, then it's probably a good idea to use a document model. The relational technique of _shredding_ can lead unnecessary complicated application code.
+If the data in your application has a document-like structure (tree of one-to-many relationships and the data is mostly loaded at once), then it's probably a good idea to use a document model. The relational technique of _shredding_ (each entitiy in its own table) can lead unnecessary complicated application code.
 
 The poor support for joins in document databases may or may not be a problem.
 
 If you application does use many-to-many relationships, the document model becomes less appealing. Joins can be emulated in application code by making multiple requests. Using the document model can lead to significantly more complex application code and worse performance.
+
+For highly interconnected data, document model < relational model < graph model.
 
 #### Schema flexibility
 
