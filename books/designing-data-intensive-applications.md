@@ -300,11 +300,11 @@ For highly interconnected data, document model < relational model < graph model.
 
 #### Schema flexibility
 
-Most document databases do not enforce any schema on the data in documents. Arbitrary keys and values can be added to a document, when reading, **clients have no guarantees as to what fields the documents may contain.**
+Most document databases do not enforce any schema on the data in documents. Arbitrary keys and values can be added to a document, when reading, **database clients have no guarantees as to what fields the documents may contain.**
 
 Document databases are sometimes called _schemaless_, but maybe a more appropriate term is _schema-on-read_, in contrast to _schema-on-write_.
 
-Schema-on-read is similar to dynamic (runtime) type checking, whereas schema-on-write is similar to static (compile-time) type checking.
+Schema-on-read is when the application code is enforcing a structure, whereas in relational databases schema-on-write is true because at the time of writing data itself, database enforces a schema.
 
 The schema-on-read approach if the items on the collection don't have all the same structure (heterogeneous)
 * Many different types of objects
@@ -315,11 +315,15 @@ The schema-on-read approach if the items on the collection don't have all the sa
 
 If your application often needs to access the entire document, there is a performance advantage to this _storage locality_.
 
-The database typically needs to load the entire document, even if you access only a small portion of it. On updates, the entire document usually needs to be rewritten, it is recommended that you keep documents fairly small.
+The database typically needs to load the entire document, even if you access only a small portion of it. On updates, the entire document usually needs to be rewritten, it is recommended that you keep documents fairly small. These limitations significantly reduce situations where document databases are useful.
 
 #### Convergence of document and relational databases
 
-PostgreSQL does support JSON documents. RethinkDB supports relational-like joins in its query language and some MongoDB drivers automatically resolve database references. Relational and document databases are becoming more similar over time.
+PostgreSQL does support JSON documents and XML documents. Allows ability to query inside XML documents.
+
+RethinkDB supports relational-like joins in its query language and some MongoDB drivers automatically resolve database references. Although MongoDB is more like client side join (less efficient if database itself would have done it).
+
+Relational and document databases are becoming more similar over time.
 
 ### Query languages for data
 
@@ -338,6 +342,7 @@ In a web browser, using declarative CSS styling is much better than manipulating
 #### MapReduce querying
 
 _MapReduce_ is a programming model for processing large amounts of data in bulk across many machines, popularised by Google.
+Neither imperetive nor declerative -> in between.
 
 Mongo offers a MapReduce solution.
 
@@ -375,6 +380,8 @@ db.observations.aggregate([
 ]);
 ```
 
+This is not dissimilar to how SQL is in terms declerativeness. NoSQL systems may find itself reinventing SQL in disguise.
+
 ### Graph-like data models
 
 If many-to-many relationships are very common in your application, it becomes more natural to start modelling your data as a graph.
@@ -385,7 +392,7 @@ Well-known algorithms can operate on these graphs, like the shortest path betwee
 
 There are several ways of structuring and querying the data. The _property graph_ model (implemented by Neo4j, Titan, and Infinite Graph) and the _triple-store_ model (implemented by Datomic, AllegroGraph, and others). There are also three declarative query languages for graphs: Cypher, SPARQL, and Datalog.
 
-#### Property graphs
+#### Property graphs model
 
 Each vertex consists of:
 * Unique identifier
@@ -409,7 +416,7 @@ Graphs provide a great deal of flexibility for data modelling. Graphs are good f
 
 ---
 
-#### Triple-stores and SPARQL
+#### Triple-stores model and SPARQL
 
 In a triple-store, all information is stored in the form of very simple three-part statements: _subject_, _predicate_, _object_ (peg: _Jim_, _likes_, _bananas_). A triple is equivalent to a vertex in graph.
 
