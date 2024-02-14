@@ -407,7 +407,11 @@ Each edge consists of:
 * Label to describe the kind of relationship between the two vertices
 * A collection of properties (key-value pairs)
 
-Graphs provide a great deal of flexibility for data modelling. Graphs are good for evolvability.
+- Any vertex type can connect to any other vertex type
+- It is efficient to find edges for a vertex, and therefore it is easy to traverse a graph
+- Using different labels for different relationships, everything can me modeled in a single graph.
+
+Graphs provide a great deal of flexibility for data modelling. Graphs are good for evolvability. For example, adding more info.
 
 ---
 
@@ -418,11 +422,22 @@ Graphs provide a great deal of flexibility for data modelling. Graphs are good f
 
 #### Triple-stores model and SPARQL
 
-In a triple-store, all information is stored in the form of very simple three-part statements: _subject_, _predicate_, _object_ (peg: _Jim_, _likes_, _bananas_). A triple is equivalent to a vertex in graph.
+In a triple-store, all information is stored in the form of very simple three-part statements: _subject_, _predicate_, _object_ (peg: _Jim_, _likes_, _bananas_). It's basically similar to Property graph model just represented differently. You can describe relationships _and_ properties using that three part statement.
+
 
 #### The SPARQL query language
 
 _SPARQL_ is a query language for triple-stores using the RDF data model.
+
+#### Graph Databases and Network Model
+
+CODASYL model is one of the network models.
+
+Differences:
+- Any vertext can refer to any vertex in Graph model
+- Can easily query any vertex with uuid or with propery (using index)
+- Query languages are largely declerative in graph model
+
 
 #### The foundation: Datalog
 
