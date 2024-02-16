@@ -447,15 +447,22 @@ We define _rules_ that tell the database about new predicates and rules can refe
 
 Rules can be combined and reused in different queries. It's less convenient for simple one-off queries, but it can cope better if your data is complex.
 
+#### Summary
+Document databases is for self contained documents and relationships with one document and another is rare. Graph is where anything can be related to anything. Both don't enforce schema on what they store. But there is implicit (on read) schema.
+
+There is another data model - full text search - which is often used alongside databases. Not covered in this book. 
+
 ## Storage and retrieval
 
-Databases need to do two things: store the data and give the data back to you.
+Databases need to do two things: store the data and give the data back to you. 
+
+There are two families of storage engine - log structured and page oriented.
 
 ### Data structures that power up your database
 
 Many databases use a _log_, which is append-only data file. Real databases have more issues to deal with tho (concurrency control, reclaiming disk space so the log doesn't grow forever and handling errors and partially written records).
 
-> A _log_ is an append-only sequence of records
+> A _log_ is an append-only sequence of records. Appending to a file is super efficient.
 
 In order to efficiently find the value for a particular key, we need a different data structure: an _index_. An index is an _additional_ structure that is derived from the primary data.
 
