@@ -519,49 +519,71 @@ If the database crashes, the most recent writes are lost. We can keep a separate
 
 **Storage engines that are based on this principle of merging and compacting sorted files are often called LSM structure engines (Log Structure Merge-Tree).**
 
-Lucene, an indexing engine for full-text search used by Elasticsearch and Solr, uses a similar method for storing its _term dictionary_.
+Lucene, an indexing engine for full-text search used by Elasticsearch and Solr, uses a similar method for storing its _term dictionary_. A full text index is based on similar idea - given a word, find all the documents (web pages, products etc) that mention the word.
 
-LSM-tree algorithm can be slow when looking up keys that don't exist in the database. To optimise this, storage engines often use additional _Bloom filters_ (a memory-efficient data structure for approximating the contents of a set).
+LSM-tree algorithm can be slow when looking up keys that don't exist in the database. To optimise this, storage engines often use additional _Bloom filters_ (a memory-efficient data structure for approximating the contents of a set). Bloom filter can tell you if a key definitely _does not_ exist in the set.
 
 There are also different strategies to determine the order and timing of how SSTables are compacted and merged. Mainly two _size-tiered_ and _leveled_ compaction. LevelDB and RocksDB use leveled compaction, HBase use size-tiered, and Cassandra supports both. In size-tiered compaction, newer and smaller SSTables are successively merged into older and larger SSTables. In leveled compaction, the key range is split up into smaller SSTables and older data is moved into separate "levels", which allows the compaction to use less disk space.
 
 #### B-trees
 
-This is the most widely used indexing structure. B-tress keep key-value pairs sorted by key, which allows efficient key-value lookups and range queries.
+This is the most widely used indexing structure. Standard indexing in relational db, and many non relational dbs also use this.
+
+B-tress keep key-value pairs sorted by key, which allows efficient key-value lookups and range queries.
 
 The log-structured indexes break the database down into variable-size _segments_ typically several megabytes or more. B-trees break the database down into fixed-size _blocks_ or _pages_, traditionally 4KB.
 
-One page is designated as the _root_ and you start from there. The page contains several keys and references to child pages.
+One page is designated as the _root_ and you start from there. Each page can be identified using an addresss or location. The page contains several keys and references to child pages.
+
+Ultimately you reach the leaf page, which either contains reference to the value for the key which is another page or the value is inline with the key itself in the page.
 
 If you want to update the value for an existing key in a B-tree, you search for the leaf page containing that key, change the value in that page, and write the page back to disk. If you want to add new key, find the page and add it to the page. If there isn't enough free space in the page to accommodate the new key, it is split in two half-full pages, and the parent page is updated to account for the new subdivision of key ranges.
 
-Trees remain _balanced_. A B-tree with _n_ keys always has a depth of _O_(log _n_).
+Trees remain _balanced_. A B-tree with _n_ keys always has a depth of _O_(log _n_). Most databases are only 3-4 levels deep with sufficient branching factor (number of references each page has to another page). 
 
 The basic underlying write operation of a B-tree is to overwrite a page on disk with new data. It is assumed that the overwrite does not change the location of the page, all references to that page remain intact. This is a big contrast to log-structured indexes such as LSM-trees, which only append to files.
 
 Some operations require several different pages to be overwritten. When you split a page, you need to write the two pages that were split, and also overwrite their parent. If the database crashes after only some of the pages have been written, you end up with a corrupted index.
 
-It is common to include an additional data structure on disk: a _write-ahead log_ (WAL, also know as the _redo log_).
+It is common to include an additional data structure on disk: a _write-ahead log_ (WAL, also know as the _redo log_). It is an append only log. All B tree modifications must be recorded here before they can applied. So, this log can be used to restore B tree to a consistent state after a crash.
 
 Careful concurrency control is required if multiple threads are going to access, typically done protecting the tree internal data structures with _latches_ (lightweight locks).
+
+#### Some optimizations on B trees
+* Instead of overriting pages and WAL log for recovery, some use DBs use copy-on-write scheme.
+* Leaf pages are layed out sequentially.
+* Leaf pages have additional ptrs to left and right siblings.
 
 #### B-trees and LSM-trees
 
 LSM-trees are typically faster for writes, whereas B-trees are thought to be faster for reads. Reads are typically slower on LSM-tress as they have to check several different data structures and SSTables at different stages of compaction.
 
+B trees write every piece of data twice - once in WAL and once to the tree page. There is also an overhead when writing the whole page to disk even if a few bytes have changed. LSM also writes multiple times due to repeated compaction. 
+
+A single write leading to multiple disk writes is called write amplication.
+
 Advantages of LSM-trees:
-* LSM-trees are typically able to sustain higher write throughput than B-trees, party because they sometimes have lower write amplification: a write to the database results in multiple writes to disk. The more a storage engine writes to disk, the fewer writes per second it can handle.
+
+* LSM-trees are typically able to sustain higher write throughput than B-trees, party because they sometimes have lower write amplification. The more a storage engine writes to disk, the fewer writes per second it can handle.
 * LSM-trees can be compressed better, and thus often produce smaller files on disk than B-trees. B-trees tend to leave disk space unused due to fragmentation.
 
+
 Downsides of LSM-trees:
-* Compaction process can sometimes interfere with the performance of ongoing reads and writes. B-trees can be more predictable. The bigger the database, the the more disk bandwidth is required for compaction. Compaction cannot keep up with the rate of incoming writes, if not configured properly you can run out of disk space.
+* Compaction process can sometimes interfere with the performance of ongoing reads and writes. B-trees can be more predictable.
+* The bigger the database, the the more disk bandwidth is required for compaction. Compaction cannot keep up with the rate of incoming writes, if not configured properly you can run out of disk space.
 * On B-trees, each key exists in exactly one place in the index. This offers strong transactional semantics. Transaction isolation is implemented using locks on ranges of keys, and in a B-tree index, those locks can be directly attached to the tree.
 
 #### Other indexing structures
 
-We've only discussed key-value indexes, which are like _primary key_ index. There are also _secondary indexes_.
+We've only discussed key-value indexes, which are like _primary key_ index. Primary key is used to refer -
+* a single row in relational
+* document in document db
+* vertex in graph
 
-A secondary index can be easily constructed from a key-value index. The main difference is that in a secondary index, the indexed values are not necessarily unique. There are two ways of doing this: making each value in the index a list of matching row identifiers or by making a each entry unique by appending a row identifier to it.
+  
+There are also _secondary indexes_.
+
+A secondary index can be easily constructed from a key-value index. The main difference is that in a secondary index, the indexed values are not necessarily unique. There are two ways of doing this: making each value in the index a list of matching row identifiers or by making a each entry unique by appending a row identifier to it. Both B-trees and log structured indexes support secondary indexes.
 
 #### Full-text search and fuzzy indexes
 
