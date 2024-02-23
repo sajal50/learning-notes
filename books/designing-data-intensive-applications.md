@@ -640,7 +640,7 @@ These queries are often written by business analysts, and fed into reports. This
 
 Companies started moving away from running OLAP on OLTP systems. Separata db systems emerged -> data warehouses.
 
-Differences 
+**Differences**
 
 Read pattern - Small number of rows fetched by key (OLTP), Aggregate over large number of records (OLAP) 
 
@@ -652,7 +652,15 @@ What data represents - Latest state of data (current point in time) (OLTP), Hist
 
 #### Data warehousing
 
-A _data warehouse_ is a separate database that analysts can query to their heart's content without affecting OLTP operations. It contains read-only copy of the dat in all various OLTP systems in the company. Data is extracted out of OLTP databases (through periodic data dump or a continuous stream of update), transformed into an analysis-friendly schema, cleaned up, and then loaded into the data warehouse (process _Extract-Transform-Load_ or ETL).
+OLTP systems are designed to be highly available and run with low latency. You don't want to run adhoc heavy analytics query on it.
+
+A _data warehouse_ is a separate database that analysts can query to their heart's content without affecting OLTP operations. It contains read-only copy of the dat in all various OLTP systems in the company. 
+
+Data 
+is extracted out of OLTP databases (through periodic data dump or a continuous stream of update)\
+transformed into an analysis-friendly schema\
+cleaned up\ 
+and then loaded into the data warehouse (process _Extract-Transform-Load_ or ETL).
 
 A data warehouse is most commonly relational, but the internals of the systems can look quite different.
 
