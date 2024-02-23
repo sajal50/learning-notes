@@ -690,19 +690,33 @@ A variaton of it is called _snowflake schema_. Dimensions subdivided in sub-dime
 
 In a row-oriented storage engine, when you do a query that filters on a specific field, the engine will load all those rows with all their fields into memory, parse them and filter out the ones that don't meet the requirement. This can take a long time.
 
-_Column-oriented storage_ is simple: don't store all the values from one row together, but store all values from each _column_ together instead. If each column is stored in a separate file, a query only needs to read and parse those columns that are used in a query, which can save a lot of work.
+_Column-oriented storage_ is simple: don't store all the values from one row together, but store all values from each _column_ together instead. If each column is stored in a separate file, a query only needs to read and parse those columns that are used in a query, which can save a lot of work. Typical analytics query only accesses 4 to 5 columns at a time.
+
+Column storage is easier understood with relational model, but it applies to document model as well.
+
+#### Column Compression
 
 Column-oriented storage often lends itself very well to compression as the sequences of values for each column look quite repetitive, which is a good sign for compression. A technique that is particularly effective in data warehouses is _bitmap encoding_.
 
 Bitmap indexes are well suited for all kinds of queries that are common in a data warehouse.
 
-> Cassandra and HBase have a concept of _column families_, which they inherited from Bigtable.
+> Cassandra and HBase have a concept of _column families_, which they inherited from Bigtable. Within each column family, all rows are stored together, but with a row key. No column compression as well. Big table is very much row oriented.
 
+
+#### Memory bandwidth and vectorized processing
 Besides reducing the volume of data that needs to be loaded from disk, column-oriented storage layouts are also good for making efficient use of CPU cycles (_vectorised processing_).
+
+
+#### Sort Order in Column Storage
+Can't sort columns independently because row k in one column needs to match row k in another column.
+
+So choose your sort key carefully based on query pattern. Can also choose second and third sort key. Helps with query and also with compression.
 
 **Column-oriented storage, compression, and sorting helps to make read queries faster and make sense in data warehouses, where most of the load consist on large read-only queries run by analysts. The downside is that writes are more difficult.**
 
-An update-in-place approach, like B-tree use, is not possible with compressed columns. If you insert a row in the middle of a sorted table, you would most likely have to rewrite all column files.
+An update-in-place approach, like B-tree use, is not possible with compressed columns. If you insert a row in the middle of a sorted table, you would most likely have to rewrite all column files. An approach similar to LSM trees - in memory data structure - is used which collects updates and then writes in bulk.
+
+From an analyst's PoV data that has been modified is immediately available.
 
 It's worth mentioning _materialised aggregates_ as some cache of the counts ant the sums that queries use most often. A way of creating such a cache is with a _materialised view_, on a relational model this is usually called a _virtual view_: a table-like object whose contents are the results of some query. A materialised view is an actual copy of the query results, written in disk, whereas a virtual view is just a shortcut for writing queries.
 
