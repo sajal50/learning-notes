@@ -585,6 +585,23 @@ There are also _secondary indexes_.
 
 A secondary index can be easily constructed from a key-value index. The main difference is that in a secondary index, the indexed values are not necessarily unique. There are two ways of doing this: making each value in the index a list of matching row identifiers or by making a each entry unique by appending a row identifier to it. Both B-trees and log structured indexes support secondary indexes.
 
+#### Storing values wihin or outside indexes
+
+2 choices - 
+
+- Either store the value (row, vertex or document) with the index itself (**clustered index**). This is useful when extra hop for heap file (described below) is too much of a perf issues.
+- Or store the value (row, vertex or documented) in a heap file. And have a ptr back. Avoids duplication when multiple secondary indexes are present.
+
+A compromise is **covering index** - stores some of the columns within the index.
+
+As with any duplication of data, reads become faster, writes become slower especially when transactional guarantees need to be given.
+
+#### Multi column index
+Most common is **concatenated index** - combines several columns for one key. Order matters in this case especially for range queries. Is useful for quering for example geo spatial data like long and lat.
+
+Btw, there is a special index for long/lat called R trees. Not discussed in this book.
+
+
 #### Full-text search and fuzzy indexes
 
 Indexes don't allow you to search for _similar_ keys, such as misspelled words. Such _fuzzy_ querying requires different techniques.
@@ -597,26 +614,38 @@ Lucene uses SSTable-like structure for its term dictionary. Lucene, the in-memor
 
 Disks have two significant advantages: they are durable, and they have lower cost per gigabyte than RAM.
 
-It's quite feasible to keep them entirely in memory, this has lead to _in-memory_ databases.
+It's quite feasible to keep datasets (perhaps small enough) entirely in memory (even if distributed across machines), this has lead to _in-memory_ databases.
 
 Key-value stores, such as Memcached are intended for cache only, it's acceptable for data to be lost if the machine is restarted. Other in-memory databases aim for durability, with special hardware, writing a log of changes to disk, writing periodic snapshots to disk or by replicating in-memory sate to other machines.
 
 When an in-memory database is restarted, it needs to reload its state, either from disk or over the network from a replica. The disk is merely used as an append-only log for durability, and reads are served entirely from memory.
 
-Products such as VoltDB, MemSQL, and Oracle TimesTime are in-memory databases. Redis and Couchbase provide weak durability.
+Products such as VoltDB, MemSQL, and Oracle TimesTime are in-memory databases. RAMCloud provides durability. Redis and Couchbase provide weak durability.
 
 In-memory databases can be faster because they can avoid the overheads of encoding in-memory data structures in a form that can be written to disk.
 
-Another interesting area is that in-memory databases may provide data models that are difficult to implement with disk-based indexes.
+Another interesting area is that in-memory databases may provide data models that are difficult to implement with disk-based indexes. For instance Redis provides priority queues and sets.
 
 ### Transaction processing or analytics?
 
-A _transaction_ is a group of reads and writes that form a logical unit, this pattern became known as _online transaction processing_ (OLTP).
+A _transaction_ is a group of reads and writes that form a logical unit.
+
+Transcation needn't have ACID properties (discussed in later chapters). But rather than it provides low latency reads and writes. As opposed to batch processeing which happens once a day (again discussed later).
+
+Storing data for blogs comments, and/or looking up ecommerce data using index had a pattern to it because of interactive nature of it. This pattern became known as _online transaction processing_ (OLTP).
 
 _Data analytics_ has very different access patterns. A query would need to scan over a huge number of records, only reading a few columns per record, and calculates aggregate statistics.
 
 These queries are often written by business analysts, and fed into reports. This pattern became known for _online analytics processing_ (OLAP).
 
+Companies started moving away from running OLAP on OLTP systems. Separata db systems emerged -> data warehouses.
+
+Differences 
+
+Read pattern - Small number of rows fetched by key (OLTP), Aggregate over large number of records (OLAP) 
+Main write pattern -  Random-access, low-latency writes from user input (OLTP), Bulk import (ETL) or event stream (OLAP) 
+Primarily used by -  End user/customer, via web application (OLTP),  Internal analyst, for decision support (OLAP)
+What data represents - Latest state of data (current point in time) (OLTP), History of events that happened over time (OLAP)
 
 #### Data warehousing
 
