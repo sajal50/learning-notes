@@ -659,22 +659,32 @@ A _data warehouse_ is a separate database that analysts can query to their heart
 Data 
 is extracted out of OLTP databases (through periodic data dump or a continuous stream of update)\
 transformed into an analysis-friendly schema\
-cleaned up\ 
+cleaned up\
 and then loaded into the data warehouse (process _Extract-Transform-Load_ or ETL).
 
-A data warehouse is most commonly relational, but the internals of the systems can look quite different.
+Storage engines (indexing algos) discussed so far don't work well for OLAP systems.
 
+A data warehouse is most commonly relational, but the internals of the systems can look quite different because of different query/access patterns.
+
+Some dbs like MS SQL server or SAP HANA have support for both transcational and data warehousing in same product, but it is rare.
 Amazon RedShift is hosted version of ParAccel. Apache Hive, Spark SQL, Cloudera Impala, Facebook Presto, Apache Tajo, and Apache Drill. Some of them are based on ideas from Google's Dremel.
 
-Data warehouses are used in fairly formulaic style known as a _star schema_.
+**Schema and Model for Analytics**
+
+Data warehouses are used in fairly run of the mill style known as a _star schema_ or _dimensional modelling_.
 
 Facts are captured as individual events, because this allows maximum flexibility of analysis later. The fact table can become extremely large.
+
+Fact tables may have FK references into _dimension tables_.
 
 Dimensions represent the _who_, _what_, _where_, _when_, _how_ and _why_ of the event.
 
 The name "star schema" comes from the fact than when the table relationships are visualised, the fact table is in the middle, surrounded by its dimension tables, like the rays of a star.
 
 Fact tables often have over 100 columns, sometimes several hundred. Dimension tables can also be very wide.
+
+A variaton of it is called _snowflake schema_. Dimensions subdivided in sub-dimensions. More normalized than star schema.
+
 
 ### Column-oriented storage
 
