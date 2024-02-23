@@ -643,8 +643,11 @@ Companies started moving away from running OLAP on OLTP systems. Separata db sys
 Differences 
 
 Read pattern - Small number of rows fetched by key (OLTP), Aggregate over large number of records (OLAP) 
+
 Main write pattern -  Random-access, low-latency writes from user input (OLTP), Bulk import (ETL) or event stream (OLAP) 
+
 Primarily used by -  End user/customer, via web application (OLTP),  Internal analyst, for decision support (OLAP)
+
 What data represents - Latest state of data (current point in time) (OLTP), History of events that happened over time (OLAP)
 
 #### Data warehousing
