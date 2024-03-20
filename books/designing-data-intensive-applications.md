@@ -728,13 +728,13 @@ A common special case of a materialised view is know as a _data cube_ or _OLAP c
 
 Change to an application's features also requires a change to data it stores.
 
-Relational databases conforms to one schema although that schema can be changed, there is one schema in force at any point in time. **Schema-on-read (or schemaless) contain a mixture of older and newer data formats.**
+Relational databases conforms to one schema although that schema can be changed, there is one schema in force at any point in time. **Schema-on-read (or schemaless) contain a mixture of older and newer data formats.** When data format or schema changes, usually application code changes as well.
 
 In large applications changes don't happen instantaneously. You want to perform a _rolling upgrade_ and deploy a new version to a few nodes at a time, gradually working your way through all the nodes without service downtime.
 
 Old and new versions of the code, and old and new data formats, may potentially all coexist. We need to maintain compatibility in both directions
-* Backward compatibility, newer code can read data that was written by older code.
-* Forward compatibility, older code can read data that was written by newer code.
+* Backward compatibility, newer code can read data that was written by older code. Easier as new code knows the old format and can work accordingly.
+* Forward compatibility, older code can read data that was written by newer code. This is harder as old code needs to ignore data additions/modifications made by newer code.
 
 ### Formats for encoding data
 
