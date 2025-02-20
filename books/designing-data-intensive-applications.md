@@ -349,8 +349,8 @@ Mongo offers a MapReduce solution.
 ```js
 db.observations.mapReduce(
     function map() { 2
-        var year  = this.observationTimestamp.getFullYear();
-        var month = this.observationTimestamp.getMonth() + 1;
+        const year  = this.observationTimestamp.getFullYear();
+        const month = this.observationTimestamp.getMonth() + 1;
         emit(year + "-" + month, this.numAnimals); 3
     },
     function reduce(key, values) { 4
